@@ -1,6 +1,6 @@
 # 반려동물 질환 진단 AI
 
-반려동물(고양이/강아지) 안구 질환, 고양이 피부 질환, 반려동물 근골격계 질환을 딥러닝으로 진단하는 시스템.  
+반려동물(고양이/강아지) 안구 질환, 피부 질환, 근골격계 질환을 딥러닝으로 진단하는 시스템.  
 의료 이미지 특화 증강과 2단계 파인튜닝 전략을 적용한 3개의 독립 파이프라인으로 구성.
 
 ---
@@ -9,14 +9,23 @@
 
 ### 1. 안구 질환 진단 (Eye Disease Diagnosis)
 
-고양이·강아지 안구 질환을 질환별 독립 이진 분류 모델로 진단.
+고양이 안구 질환을 질환별 독립 이진 분류 모델로 진단.
 
-- **모델**: ViT-Base-16 / EfficientNet-B4 (질환별 독립 이진 분류)
-- **고양이**: 각막궤양, 각막부골편, 결막염, 비궤양성 각막염, 안검염 (5종)
-- **강아지**: 결막염, 색소성 각막염, 안검내반증 등 (10종)
+- **모델**: ViT-Base-16 (질환별 독립 이진 분류, BCEWithLogitsLoss + pos_weight)
+- **고양이 (완료)**: 각막궤양 / 각막부골편 / 결막염 / 비궤양성각막염 / 안검염 (5종)
+- **강아지**: 미학습
 - **학습**: 2단계 파인튜닝 — 백본 동결 → 전체 파인튜닝 (차등 LR)
 - **추론**: CLI 기반 진단 도구 (신뢰도 임계값 0.45, EXIF 자동 보정)
-- **학습 파일**: `runs_cat/`, `runs_dog/` (best.pt 저장)
+- **평가 결과 (고양이, Validation)**:
+
+| 질환 | Accuracy | AUROC |
+|------|----------|-------|
+| 각막궤양 | 0.832 | 0.918 |
+| 각막부골편 | 0.942 | 0.976 |
+| 결막염 | 0.760 | 0.807 |
+| 비궤양성각막염 | 0.925 | 0.970 |
+| 안검염 | 0.825 | 0.953 |
+| **평균** | **0.857** | **0.925** |
 
 ### 2. 피부 질환 진단 (Skin Disease Diagnosis)
 
@@ -46,9 +55,10 @@ X-ray/MRI 이미지에서 반려동물 근골격계 질환 4종을 분류.
 |------|------|
 | Framework | PyTorch |
 | Detection / Segmentation | YOLO11l-seg |
-| Classification | ViT-Base-16, EfficientNet-B4 / B5 / B7 |
+| Classification | ViT-Base-16, EfficientNet-B5 / B7 |
 | Augmentation | torchvision transforms, Albumentations |
 | Optimization | AMP (fp16), Gradient Accumulation, WeightedRandomSampler |
+| Evaluation | scikit-learn (classification_report, AUROC) |
 | Dataset | AI Hub 반려동물 질환 데이터셋 |
 
 ---
@@ -64,7 +74,8 @@ X-ray/MRI 이미지에서 반려동물 근골격계 질환 4종을 분류.
 │   ├── 3_train_cat.py             # 고양이 학습 (5종 질환 자동화)
 │   ├── 4_train_dog.py             # 강아지 학습 (10종 질환 자동화)
 │   ├── 5_inference.py             # CLI 진단 도구
-│   └── runs_cat/                  # 고양이 학습 결과 (best.pt × 5종)
+│   ├── 6_evaluate_cat.py          # 고양이 Validation 평가 (Accuracy / AUROC)
+│   └── eval_results/              # confusion_matrix.png, performance.png, CSV/TXT
 ├── 02_skin_disease/
 │   ├── README.md
 │   ├── 1_eda.py ~ 11_pipeline.py  # 전처리 → 학습 → 추론 파이프라인
