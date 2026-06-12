@@ -1,0 +1,8 @@
+path: yolo_dataset
+train: images/train
+val:   images/val
+test:  images/test
+
+nc: 1
+names:
+  0: 병변   # A4 + A6 통합 (바이너리 탐지)
