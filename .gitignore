@@ -1,6 +1,7 @@
 data/
 *.pt
 *.onnx
+runs_cat/
 runs_dog/
 runs/
 __pycache__/
